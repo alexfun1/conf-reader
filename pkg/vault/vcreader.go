@@ -69,7 +69,7 @@ func (v *Vault) Init() error {
 		return err
 	}
 	v.Client.SetToken(os.Getenv("VAULT_TOKEN"))
-	
+
 	return nil
 }
 
@@ -112,7 +112,7 @@ func (v *Vault) GetJSON(key string) ([]byte, error) {
 }
 
 //Backward compatibility
-
+/*
 func (v *Vault) GetConfig(key string) (map[string][]byte, error) {
 	result := map[string][]byte{}
 	secret, err := v.Client.Logical().Read(v.Storage + key)
@@ -160,3 +160,4 @@ func (v *Vault) List(key string) (map[string]interface{}, error) {
 	return secret.Data, nil
 
 }
+*/
