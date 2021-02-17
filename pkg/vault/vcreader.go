@@ -14,39 +14,31 @@ import (
 // Vault - vault api calls
 // Expects VAULT_ADDR, VAULT_INSECURE, VAULT_TOKEN to be set in env variables
 type Vault struct {
-	Storage string
-	Config  *api.Config
-	Client  *api.Client
+	Storage  string
+	Address  string
+	Insecure bool
+	Config   *api.Config
+	Client   *api.Client
 }
 
-func (v *Vault) setConfig() bool {
-	v.Config.Address = os.Getenv("VAULT_ADDR")
-	flag, _ := strconv.ParseBool((os.Getenv("VAULT_INSECURE")))
-	if flag {
-		err := v.Config.ConfigureTLS(&api.TLSConfig{Insecure: flag})
-		if err != nil {
-			log.Println("Vault SSL verification disabled")
-			return false
-		}
+func (v *Vault) setAddress() {
+	v.Address = os.Getenv("VAULT_ADDR")
+	if len(v.Address) < 1 {
+		v.Address = "127.0.0.1"
 	}
-	return true
 }
 
-func (v *Vault) setClient() bool {
+func (v *Vault) setInsecure() {
 	var err error
-	v.Client, err = api.NewClient(v.Config)
+	v.Insecure, err = strconv.ParseBool((os.Getenv("VAULT_INSECURE")))
 	if err != nil {
-		log.Println("Error connecting to Vault: ", err)
-		return false
+		log.Println("Error getting VAULT_INSECURE value: %s, setting to false ", err)
+		v.Insecure = false
 	}
-	v.Client.SetToken(os.Getenv("VAULT_TOKEN"))
-	return true
 }
 
-//Init - initialize vault object - creates connection and empty key structure
-func (v *Vault) Init() error {
-	v.Config = new(api.Config)
-	v.Client = new(api.Client)
+func (v *Vault) setStorage() {
+
 	v.Storage = os.Getenv("VAULT_STORAGE")
 
 	if len(v.Storage) < 1 {
@@ -56,13 +48,28 @@ func (v *Vault) Init() error {
 	if !strings.HasSuffix(v.Storage, "/") {
 		v.Storage = v.Storage + "/"
 	}
+}
 
-	if !v.setConfig() {
-		return fmt.Errorf("Cannot initiate vault connection: address - %s", os.Getenv("VAULT_ADDR"))
+//Init - initialize vault object - creates connection and empty key structure
+func (v *Vault) Init() error {
+	v.setAddress()
+	v.setInsecure()
+	v.setStorage()
+	v.Config = new(api.Config)
+	v.Client = new(api.Client)
+
+	v.Config.Address = v.Address
+	v.Config.ConfigureTLS(&api.TLSConfig{Insecure: v.Insecure})
+
+	var err error
+
+	v.Client, err = api.NewClient(v.Config)
+	if err != nil {
+		log.Println("Error connecting to Vault: ", err)
+		return err
 	}
-	if !v.setClient() {
-		return fmt.Errorf("Cannot initiate vault connection: address - %s", os.Getenv("VAULT_ADDR"))
-	}
+	v.Client.SetToken(os.Getenv("VAULT_TOKEN"))
+	
 	return nil
 }
 
