@@ -129,3 +129,17 @@ func (v *Vault) GetJSON(key string) ([]byte, error) {
 
 	return result, nil
 }
+
+func (v *Vault) List(key string) (map[string]interface{}, error) {
+	secret, err := v.Client.Logical().List(v.Storage + key)
+	if err != nil {
+		log.Printf("Error reading secret:%s ", err.Error())
+		return nil, err
+	}
+
+	if secret == nil {
+		return nil, fmt.Errorf("Key %s does not exist", key)
+	}
+	return secret.Data, nil
+
+}
