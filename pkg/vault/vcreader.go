@@ -73,7 +73,7 @@ func (v *Vault) Init() error {
 	return nil
 }
 
-func (v *Vault) GetData(key string) (map[string]interface{}, error) {
+func (v *Vault) GetMapInterface(key string) (map[string]interface{}, error) {
 	secret, err := v.Client.Logical().Read(v.Storage + key)
 	if err != nil {
 		log.Printf("Error reading secret:%s ", err.Error())
@@ -87,9 +87,35 @@ func (v *Vault) GetData(key string) (map[string]interface{}, error) {
 	return secret.Data, nil
 }
 
+func (v *Vault) GetMapByte(key string) (map[string][]byte, error) {
+	result := map[string][]byte{}
+	secret, err := v.GetMapInterface(key)
+	if err !=nil {
+		return nil, err
+	}
+	//Converting values to byte
+	for i, s := range secret {
+		result[i] = []byte(fmt.Sprintf("%v", s))
+	}
+	return result, nil
+}
+
+func (v *Vault) GetMapString(key string) (map[string]string, error) {
+	result := map[string]string{}
+	secret, err := v.GetMapInterface(key)
+	if err !=nil {
+		return nil, err
+	}
+	//Converting values to string
+	for i, s := range secret {
+		result[i] = fmt.Sprintf("%v", s)
+	}
+	return result, nil
+}
+
 
 func (v *Vault) GetJSON(key string) ([]byte, error) {
-	data, err := v.GetData(key)
+	data, err := v.GetMapInterface(key)
 	if err != nil {
 
 		return nil, err
