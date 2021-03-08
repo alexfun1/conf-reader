@@ -73,7 +73,7 @@ func (v *Vault) Init() error {
 	return nil
 }
 
-func (v *Vault) getData(key string) (map[string]interface{}, error) {
+func (v *Vault) GetData(key string) (map[string]interface{}, error) {
 	secret, err := v.Client.Logical().Read(v.Storage + key)
 	if err != nil {
 		log.Printf("Error reading secret:%s ", err.Error())
@@ -87,16 +87,9 @@ func (v *Vault) getData(key string) (map[string]interface{}, error) {
 	return secret.Data, nil
 }
 
-func (v *Vault) GetPlainData(key string) (map[string]interface{}, error) {
-	result, err := v.getData(key)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
 
 func (v *Vault) GetJSON(key string) ([]byte, error) {
-	data, err := v.getData(key)
+	data, err := v.GetData(key)
 	if err != nil {
 
 		return nil, err
@@ -110,54 +103,3 @@ func (v *Vault) GetJSON(key string) ([]byte, error) {
 
 	return result, nil
 }
-
-//Backward compatibility
-/*
-func (v *Vault) GetConfig(key string) (map[string][]byte, error) {
-	result := map[string][]byte{}
-	secret, err := v.Client.Logical().Read(v.Storage + key)
-	if err != nil {
-		log.Printf("Error reading secret:%s ", err.Error())
-		return nil, err
-	}
-
-	if secret == nil {
-		return nil, fmt.Errorf("Key %s does not exist", key)
-	}
-
-	//Converting values to byte
-	for i, s := range secret.Data {
-		result[i] = []byte(fmt.Sprintf("%v", s))
-	}
-
-	return result, nil
-}
-
-func (v *Vault) GetPlainConfig(key string) (map[string]interface{}, error) {
-	secret, err := v.Client.Logical().Read(v.Storage + key)
-	if err != nil {
-		log.Printf("Error reading secret:%s ", err.Error())
-		return nil, err
-	}
-
-	if secret == nil {
-		return nil, fmt.Errorf("Key %s does not exist", key)
-	}
-
-	return secret.Data, nil
-}
-
-func (v *Vault) List(key string) (map[string]interface{}, error) {
-	secret, err := v.Client.Logical().List(v.Storage + key)
-	if err != nil {
-		log.Printf("Error reading secret:%s ", err.Error())
-		return nil, err
-	}
-
-	if secret == nil {
-		return nil, fmt.Errorf("Key %s does not exist", key)
-	}
-	return secret.Data, nil
-
-}
-*/
